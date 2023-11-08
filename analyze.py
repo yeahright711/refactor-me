@@ -6,135 +6,71 @@ df = pd.read_csv('data/raw/shopping_behavior_updated.csv')
 # calculate summary statistics on the Purchase Amount column
 # TODO: Is there a way to encapsulate all this functionality
 # TODO: in one function call?
-s1 = df['Purchase Amount (USD)'].mean()
-s2 = df['Purchase Amount (USD)'].median()
-s3 = df['Purchase Amount (USD)'].max()
-s4 = df['Purchase Amount (USD)'].min()
-s5 = df['Purchase Amount (USD)'].std()
+# result = df['Purchase Amount (USD)'].agg(['mean', 'median', 'max', 'min', 'std'])
+def print_purchase_amount_statistics(df):
+    result = df['Purchase Amount (USD)'].agg(['mean', 'median', 'max', 'min', 'std'])
 
-print("Summary statistics on Purchase Amount (USD)")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
+    print("Summary statistics on Purchase Amount (USD)")
+    print("Mean:", result['mean'])
+    print("Median:", result['median'])
+    print("Max:", result['max'])
+    print("Min:", result['min'])
+    print("Standard Deviation:", result['std'])
+    print()
+
 
 # calculate summary statistics on the Age column
 # TODO: Is there a way to encapsulate all this functionality
 # TODO: in one function call?
-s1 = df['Age'].mean()
-s2 = df['Age'].median()
-s3 = df['Age'].max()
-s4 = df['Age'].min()
-s5 = df['Age'].std()
+def print_summary_statistics(df, column):
+    result = df[column].agg(['mean', 'median', 'max', 'min', 'std'])
 
-print("Summary statistics on Age")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
+    print(f"Summary statistics on {column}")
+    print("Mean:", result['mean'])
+    print("Median:", result['median'])
+    print("Max:", result['max'])
+    print("Min:", result['min'])
+    print("Standard Deviation:", result['std'])
+    print()
+
+# Call the function with your DataFrame and column name
+print_summary_statistics(df, 'Age')
 
 # summary statistics
 # TODO: is there another function we can use to calculate metrics on groups?
-winter = df[df.Season == "Winter"]
-summer = df[df.Season == "Summer"]
-spring = df[df.Season == "Spring"]
-fall = df[df.Season == "Fall"]
+def print_group_summary_statistics(df, column, group_column):
+    grouped_df = df.groupby(group_column)
 
-s1 = winter['Purchase Amount (USD)'].mean()
-s2 = winter['Purchase Amount (USD)'].median()
-s3 = winter['Purchase Amount (USD)'].max()
-s4 = winter['Purchase Amount (USD)'].min()
-s5 = winter['Purchase Amount (USD)'].std()
+    for group_name, group_data in grouped_df:
+        result = group_data[column].agg(['mean', 'median', 'max', 'min', 'std'])
+        
+        print(f"{group_name} summary statistics on {column}")
+        print("Mean:", result['mean'])
+        print("Median:", result['median'])
+        print("Max:", result['max'])
+        print("Min:", result['min'])
+        print("Standard Deviation:", result['std'])
+        print()
 
-print("Winter summary statistics on Purchase Amount (USD)")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
+# Call the function with your DataFrame and relevant columns
+print_group_summary_statistics(df, 'Purchase Amount (USD)', 'Season')
 
-s1 = summer['Purchase Amount (USD)'].mean()
-s2 = summer['Purchase Amount (USD)'].median()
-s3 = summer['Purchase Amount (USD)'].max()
-s4 = summer['Purchase Amount (USD)'].min()
-s5 = summer['Purchase Amount (USD)'].std()
-
-print("Summer summary statistics on Purchase Amount (USD)")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
-
-s1 = spring['Purchase Amount (USD)'].mean()
-s2 = spring['Purchase Amount (USD)'].median()
-s3 = spring['Purchase Amount (USD)'].max()
-s4 = spring['Purchase Amount (USD)'].min()
-s5 = spring['Purchase Amount (USD)'].std()
-
-print("Spring summary statistics on Purchase Amount (USD)")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
-
-s1 = fall['Purchase Amount (USD)'].mean()
-s2 = fall['Purchase Amount (USD)'].median()
-s3 = fall['Purchase Amount (USD)'].max()
-s4 = fall['Purchase Amount (USD)'].min()
-s5 = fall['Purchase Amount (USD)'].std()
-
-print("Fall summary statistics on Purchase Amount (USD)")
-print("Mean", s1)
-print("Median", s2)
-print("Max", s3)
-print("Min", s4)
-print("Standard Dev", s5)
-print()
-
-# keep all columns except for "Customer", & "Discount Applied"
-# TODO: is there a more efficient way to exclude columns in your dataset?
-df = df[[
-    "Customer ID",
-    "Age",
-    "Gender",
-    "Item Purchased",
-    "Category",
-    "Purchase Amount (USD)",
-    "Location",
-    "Size",
-    "Color",
-    "Season",
-    "Review Rating",
-    "Subscription Status",
-    "Shipping Type",
-    "Promo Code Used",
-    "Previous Purchases",
-    "Payment Method",
-    "Frequency of Purchases"
-]]
+columns_to_exclude = ["Customer ID", "Discount Applied"]
+df = df.drop(columns=columns_to_exclude)
 
 # figure out most popular payment method in NY
 # TODO: is there anyway we could modularize this behavior to apply to all
 # TODO: possible states? (OR possibly use a pandas function that does this
 # TODO: for us already?)
-payment_methods = df['Payment Method'].unique()
-ny = df[df.Location == "New York"]
+def find_most_frequent_payment_method(df, location):
+    location_df = df[df.Location == location]
+    most_frequent_method = location_df['Payment Method'].mode().iloc[0]
+    return most_frequent_method
 
-most_frequent_method = {}
+# Call the function with your DataFrame and desired location
+ny_most_frequent_method = find_most_frequent_payment_method(df, "New York")
+print(f"Most frequent payment method in New York: {ny_most_frequent_method}")
 
-for method in payment_methods:
-    most_frequent_method[method] = len(ny[ny['Payment Method'] == method])
-
-print(most_frequent_method)
 
 # Write this updated data out to csv file
 df.to_csv('data/processed/cleaned_data.csv', index=False)
